@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Reel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        .form-container {
+            margin: 20px 0;
+        }
+        .reel {
+            display: flex;
+            overflow-x: scroll;
+            white-space: nowrap;
+        }
+        .reel img, .reel video {
+            margin-right: 10px;
+            max-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Media Reel</h1>
+        <div class="form-container">
+            <form id="uploadForm">
+                <input type="file" id="fileInput" multiple accept="image/*,video/*">
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+        <div class="reel" id="reel">
+            <!-- Media will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const reel = document.getElementById('reel');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const files = fileInput.files;
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                fetchMedia();
+            } else {
+                alert('File upload failed!');
+            }
+        });
+
+        async function fetchMedia() {
+            const response = await fetch('/media');
+            const mediaFiles = await response.json();
+            reel.innerHTML = '';
+            mediaFiles.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = file.url;
+                    reel.appendChild(img);
+                } else if (file.type.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = file.url;
+                    video.controls = true;
+                    reel.appendChild(video);
+                }
+            });
+        }
+
+        fetchMedia();
+    </script>
+</body>
+</html>
